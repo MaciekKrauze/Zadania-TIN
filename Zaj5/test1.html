@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>E-Shop Admin</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        /* Navbar styling */
+        .top-navbar {
+            background-color: #4169e1;
+            padding: 0.75rem 1rem;
+            color: white;
+        }
+
+        .top-navbar .navbar-brand {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-right: 2rem;
+        }
+
+        .search-box {
+            border-radius: 4px;
+            min-width: 200px;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            font-size: 0.6rem;
+            transform: translate(25%, -25%);
+        }
+
+        /* Sidebar styling */
+        .sidebar {
+            background-color: #22252a;
+            color: white;
+            min-height: 100vh;
+            position: fixed;
+            width: 220px;
+            z-index: 100;
+        }
+
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.75);
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main content area */
+        .main-content {
+            margin-left: 220px;
+            padding: 20px;
+            transition: margin-left 0.3s;
+        }
+
+        /* Stats cards */
+        .stat-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+            margin-bottom: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-card .card-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+        }
+
+        .stat-card .card-value {
+            font-size: 1.75rem;
+            font-weight: bold;
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-card .card-title {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .rate-change {
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Nav Tabs */
+        .nav-tabs .nav-link {
+            color: #6c757d;
+            border: none;
+            padding: 0.75rem 1rem;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: #4169e1;
+            border-bottom: 2px solid #4169e1;
+            background-color: transparent;
+        }
+
+        /* Orders table */
+        .orders-table th {
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .orders-table tbody tr:hover {
+            background-color: rgba(0, 123, 255, 0.05);
+        }
+
+        .status-badge {
+            padding: 0.35em 0.65em;
+            font-size: 0.75em;
+            border-radius: 20px;
+        }
+
+        .action-btn {
+            border: 1px solid #dee2e6;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            color: #6c757d;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background-color: #f8f9fa;
+        }
+
+        .action-btn-view:hover {
+            color: #0d6efd;
+            border-color: #0d6efd;
+        }
+
+        .action-btn-delete:hover {
+            color: #dc3545;
+            border-color: #dc3545;
+        }
+
+        /* Pagination */
+        .pagination .page-link {
+            color: #6c757d;
+            border: none;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: #4169e1;
+            color: white;
+        }
+
+        /* Dropdown menu */
+        .dropdown-menu {
+            border-radius: 0.375rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid #dee2e6;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .stat-card {
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- Top Navbar -->
+<nav class="navbar navbar-expand-lg top-navbar">
+    <div class="container-fluid">
+        <a class="navbar-brand text-white" href="#">
+            <i class="bi bi-shop"></i> E-Shop Admin
+        </a>
+
+        <div class="d-flex ms-auto align-items-center">
+            <!-- Search Form -->
+            <div class="me-3">
+                <div class="input-group">
+                    <input type="text" class="form-control search-box" placeholder="Szukaj...">
+                    <button class="btn btn-light" type="button">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Notifications -->
+            <div class="position-relative me-3">
+                <a href="#" class="btn btn-primary position-relative">
+                    <i class="bi bi-envelope"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge">
+                            1
+                        </span>
+                </a>
+            </div>
+
+            <!-- Notifications Bell -->
+            <div class="position-relative me-3">
+                <a href="#" class="btn btn-primary position-relative">
+                    <i class="bi bi-bell"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge">
+                            4
+                        </span>
+                </a>
+            </div>
+
+            <!-- User Dropdown -->
+            <div class="dropdown">
+                <button class="btn btn-primary dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-person-circle me-1"></i> Admin
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i>Ustawienia</a></li>
+                    <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profil</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#"><i class="bi bi-box-arrow-right me-2"></i>Wyloguj</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Sidebar -->
+<div class="sidebar d-none d-lg-block">
+    <ul class="nav flex-column pt-3">
+        <li class="nav-item">
+            <a class="nav-link active" href="#">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">
+                <i class="bi bi-box-seam"></i> Produkty
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">
+                <i class="bi bi-cart"></i> Zamówienia
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">
+                <i class="bi bi-people"></i> Klienci
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">
+                <i class="bi bi-bar-chart"></i> Raporty
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">
+                <i class="bi bi-tag"></i> Promocje
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">
+                <i class="bi bi-truck"></i> Dostawy
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">
+                <i class="bi bi-chat"></i> Wiadomości
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">
+                <i class="bi bi-gear"></i> Ustawienia
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">
+                <i class="bi bi-question-circle"></i> Pomoc
+            </a>
+        </li>
+    </ul>
+</div>
+
+<!-- Main Content Area -->
+<div class="main-content">
+    <div class="container-fluid">
+        <h2 class="mb-4">Panel sterowania</h2>
+
+        <!-- Welcome Alert -->
+        <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
+            <i class="bi bi-info-circle me-2"></i>
+            <div>
+                Witaj w panelu administracyjnym! Masz <strong>7 nowych zamówień</strong> oraz <strong>4 nieprzeczytane wiadomości</strong>.
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row">
+            <!-- Total Sales -->
+            <div class="col-xl-3 col-md-6">
+                <div class="stat-card">
+                    <div>
+                        <div class="card-title">Całkowita sprzedaż</div>
+                        <div class="card-value">58,400 zł</div>
+                        <div class="rate-change text-success">
+                            <i class="bi bi-arrow-up me-1"></i> 12.5%
+                        </div>
+                    </div>
+                    <div class="card-icon bg-primary-subtle text-primary">
+                        <i class="bi bi-currency-dollar"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders -->
+            <div class="col-xl-3 col-md-6">
+                <div class="stat-card">
+                    <div>
+                        <div class="card-title">Zamówienia</div>
+                        <div class="card-value">486</div>
+                        <div class="rate-change text-success">
+                            <i class="bi bi-arrow-up me-1"></i> 8.2%
+                        </div>
+                    </div>
+                    <div class="card-icon bg-warning-subtle text-warning">
+                        <i class="bi bi-cart"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customers -->
+            <div class="col-xl-3 col-md-6">
+                <div class="stat-card">
+                    <div>
+                        <div class="card-title">Klienci</div>
+                        <div class="card-value">1,245</div>
+                        <div class="rate-change text-success">
+                            <i class="bi bi-arrow-up me-1"></i> 5.3%
+                        </div>
+                    </div>
+                    <div class="card-icon bg-success-subtle text-success">
+                        <i class="bi bi-people"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Average Cart -->
+            <div class="col-xl-3 col-md-6">
+                <div class="stat-card">
+                    <div>
+                        <div class="card-title">Średni koszyk</div>
+                        <div class="card-value">120 zł</div>
+                        <div class="rate-change text-danger">
+                            <i class="bi bi-arrow-down me-1"></i> 2.1%
+                        </div>
+                    </div>
+                    <div class="card-icon bg-info-subtle text-info">
+                        <i class="bi bi-basket"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <ul class="nav nav-tabs mt-4 mb-3" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">Przegląd</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" type="button" role="tab" aria-controls="orders" aria-selected="false">Zamówienia</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="products-tab" data-bs-toggle="tab" data-bs-target="#products" type="button" role="tab" aria-controls="products" aria-selected="false">Produkty</button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="myTabContent">
+            <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                        <h5 class="mb-0">Ostatnie zamówienia</h5>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                Sortuj
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="#">Wg daty</a></li>
+                                <li><a class="dropdown-item" href="#">Wg wartości</a></li>
+                                <li><a class="dropdown-item" href="#">Wg statusu</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table orders-table mb-0">
+                            <thead>
+                            <tr>
+                                <th scope="col">#ID</th>
+                                <th scope="col">Klient</th>
+                                <th scope="col">Data</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Wartość</th>
+                                <th scope="col">Akcje</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>#ORD-7892</td>
+                                <td>Jan Kowalski</td>
+                                <td>24 Mar 2025</td>
+                                <td><span class="status-badge bg-success">Zrealizowane</span></td>
+                                <td>239.99 zł</td>
+                                <td>
+                                    <a href="#" class="action-btn action-btn-view me-1"><i class="bi bi-eye"></i></a>
+                                    <a href="#" class="action-btn action-btn-delete"><i class="bi bi-trash"></i></a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#ORD-7891</td>
+                                <td>Anna Nowak</td>
+                                <td>24 Mar 2025</td>
+                                <td><span class="status-badge bg-warning text-dark">W realizacji</span></td>
+                                <td>149.50 zł</td>
+                                <td>
+                                    <a href="#" class="action-btn action-btn-view me-1"><i class="bi bi-eye"></i></a>
+                                    <a href="#" class="action-btn action-btn-delete"><i class="bi bi-trash"></i></a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#ORD-7890</td>
+                                <td>Piotr Wiśniewski</td>
+                                <td>23 Mar 2025</td>
+                                <td><span class="status-badge bg-danger">Anulowane</span></td>
+                                <td>349.99 zł</td>
+                                <td>
+                                    <a href="#" class="action-btn action-btn-view me-1"><i class="bi bi-eye"></i></a>
+                                    <a href="#" class="action-btn action-btn-delete"><i class="bi bi-trash"></i></a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#ORD-7889</td>
+                                <td>Magdalena Kaczmarek</td>
+                                <td>23 Mar 2025</td>
+                                <td><span class="status-badge bg-info">Wysłane</span></td>
+                                <td>199.50 zł</td>
+                                <td>
+                                    <a href="#" class="action-btn action-btn-view me-1"><i class="bi bi-eye"></i></a>
+                                    <a href="#" class="action-btn action-btn-delete"><i class="bi bi-trash"></i></a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#ORD-7888</td>
+                                <td>Tomasz Zieliński</td>
+                                <td>22 Mar 2025</td>
+                                <td><span class="status-badge bg-success">Zrealizowane</span></td>
+                                <td>89.99 zł</td>
+                                <td>
+                                    <a href="#" class="action-btn action-btn-view me-1"><i class="bi bi-eye"></i></a>
+                                    <a href="#" class="action-btn action-btn-delete"><i class="bi bi-trash"></i></a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer bg-white">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-center mb-0">
+                                <li class="page-item">
+                                    <a class="page-link" href="#" aria-label="Previous">
+                                        <span aria-hidden="true">Poprzednia</span>
+                                    </a>
+                                </li>
+                                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                <li class="page-item">
+                                    <a class="page-link" href="#" aria-label="Next">
+                                        <span aria-hidden="true">Następna</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="orders" role="tabpanel" aria-labelledby="orders-tab">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Wszystkie zamówienia</h5>
+                        <p class="card-text">Tutaj będzie pełna lista zamówień z dodatkowymi filtrami i opcjami zarządzania.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="products" role="tabpanel" aria-labelledby="products-tab">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Zarządzanie produktami</h5>
+                        <p class="card-text">Tutaj będzie lista wszystkich produktów z możliwością dodawania, edycji i usuwania.</p>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                            <i class="bi bi-plus"></i> Dodaj nowy produkt
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Product Modal -->
+<div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addProductModalLabel">Dodaj nowy produkt</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label for="productName" class="form-label">Nazwa produktu</label>
+                        <input type="text" class="form-control" id="productName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="productDescription" class="form-label">Opis</label>
+                        <textarea class="form-control" id="productDescription" rows="3"></textarea>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="productPrice" class="form-label">Cena</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="productPrice" required>
+                                <span class="input-group-text">zł</span>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <label for="productStock" class="form-label">Stan magazynowy</label>
+                            <input type="number" class="form-control" id="productStock" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="productCategory" class="form-label">Kategoria</label>
+                        <select class="form-select" id="productCategory">
+                            <option selected>Wybierz kategorię</option>
+                            <option value="1">Elektronika</option>
+                            <option value="2">Odzież</option>
+                            <option value="3">Dom i ogród</option>
+                            <option value="4">Sport</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                <button type="button" class="btn btn-primary">Dodaj produkt</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

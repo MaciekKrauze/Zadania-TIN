@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>E-Sklep Panel Administracyjny</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f4f6f9;
+        }
+        .sidebar {
+            min-height: 100vh;
+            background-color: #2c3e50;
+            color: white;
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.7);
+            transition: all 0.3s ease;
+        }
+        .sidebar .nav-link:hover {
+            color: white;
+            background-color: rgba(255,255,255,0.1);
+        }
+        .dashboard-card {
+            transition: transform 0.3s ease;
+        }
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 0.25em 0.5em;
+        }
+    </style>
+</head>
+<body>
+<!-- Top Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">E-Sklep Admin</a>
+
+        <div class="ms-auto d-flex align-items-center">
+            <!-- Search -->
+            <form class="d-none d-md-flex me-3">
+                <input class="form-control" type="search" placeholder="Szukaj..." aria-label="Search">
+            </form>
+
+            <!-- Notifications -->
+            <div class="position-relative me-3">
+                <i class="bi bi-bell fs-4"></i>
+                <span class="position-absolute top-0 start-100 translate-middle badge bg-danger rounded-circle">
+                        4
+                    </span>
+            </div>
+
+            <!-- User Dropdown -->
+            <div class="dropdown">
+                <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+                    <img src="/api/placeholder/40/40" alt="Admin" class="rounded-circle me-2">
+                    Admin
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#">Profil</a></li>
+                    <li><a class="dropdown-item" href="#">Ustawienia</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#">Wyloguj</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-2 d-none d-md-block sidebar position-fixed">
+            <div class="pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">
+                            <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            h Produkty
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="bi bi-cart4 me-2"></i> Zamówienia
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="bi bi-people me-2"></i> Klienci
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="bi bi-graph-up me-2"></i> Raporty
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="col-md-10 ms-sm-auto px-4">
+            <div class="pt-3">
+                <!-- Welcome Alert -->
+                <div class="alert alert-info" role="alert">
+                    Witaj w panelu administracyjnym! Masz 7 nowych zamówień oraz 4 nieprzeczytane wiadomości.
+                </div>
+
+                <!-- Dashboard Stats -->
+                <div class="row">
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="card dashboard-card">
+                            <div class="card-body d-flex align-items-center">
+                                <i class="bi bi-currency-dollar fs-2 text-primary me-3"></i>
+                                <div>
+                                    <h5 class="card-title mb-1">Całkowita sprzedaż</h5>
+                                    <p class="card-text fs-4 fw-bold">58,400 zł</p>
+                                    <small class="text-success"><i class="bi bi-arrow-up"></i> 12.5%</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="card dashboard-card">
+                            <div class="card-body d-flex align-items-center">
+                                <i class="bi bi-cart-check fs-2 text-warning me-3"></i>
+                                <div>
+                                    <h5 class="card-title mb-1">Zamówienia</h5>
+                                    <p class="card-text fs-4 fw-bold">486</p>
+                                    <small class="text-success"><i class="bi bi-arrow-up"></i> 8.2%</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Additional stats cards similar to above -->
+                </div>
+
+                <!-- Orders Section -->
+                <div class="card mt-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Ostatnie zamówienia</h5>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                Sortuj
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#">Data</a></li>
+                                <li><a class="dropdown-item" href="#">Wartość</a></li>
+                                <li><a class="dropdown-item" href="#">Status</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+                                <th>#ID</th>
+                                <th>Klient</th>
+                                <th>Data</th>
+                                <th>Status</th>
+                                <th>Wartość</th>
+                                <th>Akcje</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>#ORD-7892</td>
+                                <td>Jan Kowalski</td>
+                                <td>24 Mar 2025</td>
+                                <td>
+                                    <span class="badge bg-success status-badge">Zrealizowane</span>
+                                </td>
+                                <td>239.99 zł</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary me-1">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <!-- More order rows -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <nav class="m-3">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1">Poprzednia</a>
+                            </li>
+                            <li class="page-item active">
+                                <a class="page-link" href="#">1</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">2</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">3</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">Następna</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Add Product Modal -->
+<div class="modal fade" id="addProductModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Dodaj nowy produkt</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Nazwa produktu</label>
+                        <input type="text" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Cena</label>
+                        <input type="number" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Dodaj</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
