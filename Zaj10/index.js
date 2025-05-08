@@ -41,10 +41,66 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const sortedFilms = [...filmy].sort((a, b) => b.ocena - a.ocena);
 
+    window.currentFilter = "Wszystkie";
+    window.currentSort = "Oceny (najlepsze)";
+    window.searchText = "";
+
     createHeader();
     createMain(sortedFilms);
     createFooter();
 });
+
+function dynamicSort(films){
+    let films_after_search = filterBySearch(films);
+    let films_after_filter = filterByCategory(films_after_search);
+    let films_after_sort = sortFilms(films_after_filter);
+
+    renderFilms(films_after_sort, window.filmCatalogSection);
+}
+
+function filterBySearch(films){
+    let filteredFilms = [];
+
+    if (!window.searchText || window.searchText === "") {
+        return films;
+    }
+
+    for (let i = 0; i < films.length; i++) {
+        if (films[i].tytul.toLowerCase().includes(window.searchText.toLowerCase())
+            || films[i].rezyser.toLowerCase().includes(window.searchText.toLowerCase())) {
+            filteredFilms.push(films[i]);
+        }
+    }
+
+    return filteredFilms;
+}
+
+function filterByCategory(films){
+    if (window.currentFilter === "Wszystkie") {
+        return films;
+    }
+
+    let filteredFilms = [];
+    for (let i = 0; i < films.length; i++) {
+        if (films[i].gatunek === window.currentFilter) {
+            filteredFilms.push(films[i]);
+        }
+    }
+    return filteredFilms;
+}
+
+function sortFilms(films){
+    let sortedFilms = [];
+
+    if (window.currentSort === "Oceny (najlepsze)") {
+        sortedFilms = [...films].sort((a, b) => b.ocena - a.ocena);
+    }
+    else if (window.currentSort === "Roku (najnowsze)") {
+        sortedFilms = [...films].sort((a, b) => b.rok - a.rok);
+    }
+
+    return sortedFilms;
+}
 
 function createHeader() {
     let header = document.createElement("header");
@@ -64,12 +120,11 @@ function createMain(films) {
 
     let sort_section = document.createElement("section");
     sort_section.className = "bg-white p-4 rounded-lg shadow-md mb-4";
+    sort_section.setAttribute("id", "sort-section");
 
     let film_catalog_section = document.createElement("section");
     film_catalog_section.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4";
-
-    window.currentFilter = "Wszystkie";
-    window.currentSort = "Oceny (najlepsze)";
+    film_catalog_section.setAttribute("id", "film-catalog-section");
 
     sort_section = createSortSection(sort_section);
     film_catalog_section = createFilmCatalogSection(film_catalog_section, films);
@@ -86,16 +141,24 @@ function createSortSection(sort_section) {
 
     let filter_article = document.createElement("article");
     filter_article.className = "mb-4";
+    filter_article.setAttribute("id", "filter-article");
 
     let sort_article = document.createElement("article");
     sort_article.className = "mb-2";
+    sort_article.setAttribute("id", "sort-article");
+
+    let search_article = document.createElement("article");
+    search_article.className = "mb-4";
+    search_article.setAttribute("id", "search-article");
 
     filter_article = createFilterArticle(filter_article);
     sort_article = createSortArticle(sort_article);
+    search_article = createSearchArticle(search_article);
 
     sort_section.appendChild(h2);
     sort_section.appendChild(filter_article);
     sort_section.appendChild(sort_article);
+    sort_section.appendChild(search_article);
 
     return sort_section;
 }
@@ -132,6 +195,8 @@ function createFilterArticle(filter_article) {
                     button.className = "bg-gray-200 text-gray-800 px-4 py-1 rounded cursor-pointer hover:bg-gray-300";
                 }
             });
+
+            dynamicSort(filmy);
         });
 
         ul.appendChild(li);
@@ -173,6 +238,8 @@ function createSortArticle(sort_article) {
                     button.className = "bg-gray-200 text-gray-800 px-4 py-1 rounded cursor-pointer hover:bg-gray-300";
                 }
             });
+
+            dynamicSort(filmy);
         });
 
         ul.appendChild(li);
@@ -181,6 +248,28 @@ function createSortArticle(sort_article) {
     sort_article.appendChild(h3);
     sort_article.appendChild(ul);
     return sort_article;
+}
+
+function createSearchArticle(search_article) {
+    let h3 = document.createElement("h3");
+    h3.innerText = "Wyszukaj film:";
+    h3.className = "font-medium text-gray-800 mb-2";
+
+    let input = document.createElement("input");
+    input.className = "bg-gray-200 text-gray-800 px-4 py-1 rounded";
+    input.setAttribute("type", "text");
+    input.setAttribute("placeholder", "wpisz nazwę filmu");
+    input.setAttribute("aria-label", "Wpisz tytuł lub nazwisko reżysera");
+    input.setAttribute("id", "search_text");
+
+    input.addEventListener("input", function(e) {
+        window.searchText = e.target.value;
+        dynamicSort(filmy);
+    });
+
+    search_article.appendChild(h3);
+    search_article.appendChild(input);
+    return search_article;
 }
 
 function createFilmCatalogSection(film_catalog_section, films) {
@@ -202,44 +291,41 @@ function renderFilms(films, container) {
         container.removeChild(container.lastChild);
     }
 
-    for (let i = 0; i < films.length; i++) {
+    for (const item of films) {
         let film_card = document.createElement("article");
         film_card.className = "mb-4";
+
+        let film_title = document.createElement("h3");
+        film_title.className = "bg-white p-2 border-b text-lg font-medium";
+        film_title.innerText = item.tytul;
+        film_card.appendChild(film_title);
 
         let film_image_container = document.createElement("div");
         film_image_container.className = "bg-white p-4 flex justify-center items-center";
 
-        let film_title = document.createElement("h3");
-        film_title.className = "bg-white p-2 border-b text-lg font-medium";
-        film_title.innerText = films[i].tytul;
-        film_card.appendChild(film_title);
-
         let img = document.createElement("img");
         img.setAttribute("src", "question.png");
-        img.setAttribute("alt", "Obrazek " + films[i].tytul);
+        img.setAttribute("alt", "Obrazek " + item.tytul);
         img.className = "w-12 h-12 border border-gray-300";
 
         film_image_container.appendChild(img);
         film_card.appendChild(film_image_container);
 
-
-
         let ul_details = document.createElement("ul");
         ul_details.className = "bg-white p-4 rounded-b-lg shadow-md";
 
-
         let li_director = document.createElement("li");
-        li_director.innerText = "Reżyser: " + films[i].rezyser;
+        li_director.innerText = "Reżyser: " + item.rezyser;
         li_director.className = "mb-1 text-gray-700";
         ul_details.appendChild(li_director);
 
         let li_year = document.createElement("li");
-        li_year.innerText = "Rok: " + films[i].rok;
+        li_year.innerText = "Rok: " + item.rok;
         li_year.className = "mb-1 text-gray-700";
         ul_details.appendChild(li_year);
 
         let li_genre = document.createElement("li");
-        li_genre.innerText = "Gatunek: " + films[i].gatunek;
+        li_genre.innerText = "Gatunek: " + item.gatunek;
         li_genre.className = "mb-1 text-gray-700";
         ul_details.appendChild(li_genre);
 
@@ -247,7 +333,7 @@ function renderFilms(films, container) {
         li_rating.className = "mt-2 text-gray-700";
 
         let rating_label = document.createElement("div");
-        rating_label.innerText = "Ocena: " + films[i].ocena;
+        rating_label.innerText = "Ocena: " + item.ocena;
         rating_label.className = "mb-1 text-gray-700";
         li_rating.appendChild(rating_label);
 
@@ -255,7 +341,7 @@ function renderFilms(films, container) {
         rating_bar_container.className = "w-full bg-gray-200 rounded-full h-2";
 
         let rating_bar = document.createElement("div");
-        let width = (films[i].ocena / 10) * 100;
+        let width = (item.ocena / 10) * 100;
         rating_bar.className = "bg-green-500 h-2 rounded-full";
         rating_bar.style.width = width + "%";
 
@@ -279,3 +365,27 @@ function createFooter() {
 
     document.body.appendChild(footer);
 }
+
+document.addEventListener("keydown", function(e) {
+    switch (e.key) {
+        case "ArrowUp":
+            console.log("Strzałka w górę");
+            break;
+        case "ArrowDown":
+            console.log("Strzałka w dół");
+            break;
+        case "ArrowLeft":
+            console.log("Strzałka w lewo");
+            break;
+        case "ArrowRight":
+            console.log("Strzałka w prawo");
+            break;
+        case "Enter":
+            console.log("Wciśnięto Enter");
+
+            break;
+        default:
+            // inne klawisze
+            break;
+    }
+});
