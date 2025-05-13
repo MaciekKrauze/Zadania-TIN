@@ -36,6 +36,10 @@ const filmy = [
     }
 ];
 
+let selected_film = 0;
+let visible_films = [];
+let filmsPerRow = 3; // Domyślna wartość dla układu siatki
+
 document.addEventListener('DOMContentLoaded', () => {
     document.body.className = "bg-gray-100";
 
@@ -48,12 +52,89 @@ document.addEventListener('DOMContentLoaded', () => {
     createHeader();
     createMain(sortedFilms);
     createFooter();
+
+    setupKeyboardNavigation();
+
+    updateFilmsPerRow();
+    window.addEventListener('resize', updateFilmsPerRow);
 });
+
+function updateFilmsPerRow() {
+    if (window.innerWidth < 768) {
+        filmsPerRow = 1;
+    } else if (window.innerWidth < 1024) {
+        filmsPerRow = 2;
+    } else {
+        filmsPerRow = 3;
+    }
+}
+
+function setupKeyboardNavigation() {
+    document.removeEventListener("keydown", handleKeyNavigation);
+    document.addEventListener("keydown", handleKeyNavigation);
+}
+
+function handleKeyNavigation(e) {
+    if (visible_films.length === 0) return;
+
+    const previousSelectedFilm = selected_film;
+
+    switch (e.key) {
+        case "ArrowUp":
+            if (selected_film >= filmsPerRow) {
+                selected_film -= filmsPerRow;
+            }
+            break;
+        case "ArrowDown":
+            if (selected_film + filmsPerRow < visible_films.length) {
+                selected_film += filmsPerRow;
+            }
+            break;
+        case "ArrowLeft":
+            if (selected_film > 0) {
+                selected_film--;
+            }
+            break;
+        case "ArrowRight":
+            if (selected_film < visible_films.length - 1) {
+                selected_film++;
+            }
+            break;
+        case "Enter":
+            if (visible_films[selected_film]) {
+                const film = visible_films[selected_film];
+                const message = `Szczegóły filmu "${film.tytul}"\n\nReżyser: ${film.rezyser}\nRok: ${film.rok}\nGatunek: ${film.gatunek}\nOcena: ${film.ocena}`;
+                alert(message);
+            }
+            break;
+        default:
+            console.log("Inny przycisk");
+            return;
+    }
+
+    if (previousSelectedFilm !== selected_film) {
+        renderFilms(visible_films, window.filmCatalogSection);
+
+        const filmCards = document.querySelectorAll('#film-catalog-section > article');
+        if (filmCards[selected_film]) {
+            filmCards[selected_film].scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest'
+            });
+        }
+    }
+}
 
 function dynamicSort(films){
     let films_after_search = filterBySearch(films);
     let films_after_filter = filterByCategory(films_after_search);
     let films_after_sort = sortFilms(films_after_filter);
+
+    visible_films = films_after_sort;
+
+    if (selected_film >= visible_films.length && visible_films.length > 0) {
+        selected_film = 0;
+    }
 
     renderFilms(films_after_sort, window.filmCatalogSection);
 }
@@ -280,6 +361,7 @@ function createFilmCatalogSection(film_catalog_section, films) {
 
     window.filmCatalogSection = film_catalog_section;
     window.allFilms = films;
+    visible_films = films;
 
     renderFilms(films, film_catalog_section);
 
@@ -291,12 +373,26 @@ function renderFilms(films, container) {
         container.removeChild(container.lastChild);
     }
 
-    for (const item of films) {
+    if (films.length === 0) {
+        let noFilmsMessage = document.createElement("p");
+        noFilmsMessage.innerText = "Nie znaleziono filmów spełniających kryteria wyszukiwania.";
+        noFilmsMessage.className = "col-span-3 text-center p-4 text-gray-600";
+        container.appendChild(noFilmsMessage);
+        return;
+    }
+
+    for (let i = 0; i < films.length; i++) {
+        const item = films[i];
         let film_card = document.createElement("article");
-        film_card.className = "mb-4";
+        film_card.className = "mb-4 bg-white rounded-lg shadow-md transition-all duration-200";
+        film_card.setAttribute("data-index", i);
+
+        if (i === selected_film) {
+            film_card.className += " border-2 border-blue-500 ring-2 ring-blue-300";
+        }
 
         let film_title = document.createElement("h3");
-        film_title.className = "bg-white p-2 border-b text-lg font-medium";
+        film_title.className = "bg-white p-2 border-b text-lg font-medium rounded-t-lg";
         film_title.innerText = item.tytul;
         film_card.appendChild(film_title);
 
@@ -312,7 +408,7 @@ function renderFilms(films, container) {
         film_card.appendChild(film_image_container);
 
         let ul_details = document.createElement("ul");
-        ul_details.className = "bg-white p-4 rounded-b-lg shadow-md";
+        ul_details.className = "bg-white p-4 rounded-b-lg";
 
         let li_director = document.createElement("li");
         li_director.innerText = "Reżyser: " + item.rezyser;
@@ -351,6 +447,12 @@ function renderFilms(films, container) {
         ul_details.appendChild(li_rating);
 
         film_card.appendChild(ul_details);
+
+        film_card.addEventListener('click', function() {
+            selected_film = parseInt(this.getAttribute('data-index'));
+            renderFilms(films, container);
+        });
+
         container.appendChild(film_card);
     }
 }
@@ -361,31 +463,13 @@ function createFooter() {
 
     let p = document.createElement("p");
     p.innerText = "© 2025 Biblioteka Filmowa | Stworzone z użyciem JavaScript i Tailwind CSS";
+
+    let keyboard_info = document.createElement("p");
+    keyboard_info.className = "mt-2 text-xs";
+    keyboard_info.innerText = "Użyj strzałek (←↑→↓) do nawigacji i Enter, aby zobaczyć szczegóły filmu";
+
     footer.appendChild(p);
+    footer.appendChild(keyboard_info);
 
     document.body.appendChild(footer);
 }
-
-document.addEventListener("keydown", function(e) {
-    switch (e.key) {
-        case "ArrowUp":
-            console.log("Strzałka w górę");
-            break;
-        case "ArrowDown":
-            console.log("Strzałka w dół");
-            break;
-        case "ArrowLeft":
-            console.log("Strzałka w lewo");
-            break;
-        case "ArrowRight":
-            console.log("Strzałka w prawo");
-            break;
-        case "Enter":
-            console.log("Wciśnięto Enter");
-
-            break;
-        default:
-            // inne klawisze
-            break;
-    }
-});
