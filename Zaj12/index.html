@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Biblioteka Filmów</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Aplikacja do zarządzania biblioteką filmów">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body class="bg-gray-100">
+<div id="loading" class="fixed inset-0 bg-white flex items-center justify-center z-50">
+    <div class="text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p class="text-gray-600">Ładowanie aplikacji...</p>
+    </div>
+</div>
+
+<script>
+    // LocalStorage Service - Symulacja REST API
+    class LocalStorageService {
+        constructor() {
+            this.storageKey = 'movies_library';
+            this.counterKey = 'movies_counter';
+            this.initializeStorage();
+        }
+
+        initializeStorage() {
+            if (!this.getMovies().length) {
+                const defaultMovies = [
+                    {
+                        id: '1',
+                        tytul: 'Skazani na Shawshank',
+                        rezyser: 'Frank Darabont',
+                        rok: 1994,
+                        gatunek: 'Dramat',
+                        gatunki: ['Dramat'],
+                        ocena: 9.3,
+                        obrazek: 'https://via.placeholder.com/210x295?text=Shawshank',
+                        opis: 'Historia przyjaźni między dwoma więźniami skazanymi na dożywocie.'
+                    },
+                    {
+                        id: '2',
+                        tytul: 'Ojciec Chrzestny',
+                        rezyser: 'Francis Ford Coppola',
+                        rok: 1972,
+                        gatunek: 'Dramat',
+                        gatunki: ['Dramat', 'Kryminalny'],
+                        ocena: 9.2,
+                        obrazek: 'https://via.placeholder.com/210x295?text=Godfather',
+                        opis: 'Saga rodziny mafijnej Corleone w Ameryce.'
+                    },
+                    {
+                        id: '3',
+                        tytul: 'Mroczny Rycerz',
+                        rezyser: 'Christopher Nolan',
+                        rok: 2008,
+                        gatunek: 'Akcja',
+                        gatunki: ['Akcja', 'Dramat', 'Kryminalny'],
+                        ocena: 9.0,
+                        obrazek: 'https://via.placeholder.com/210x295?text=Dark+Knight',
+                        opis: 'Batman mierzy się z anarchistycznym przestępcą Jokerem.'
+                    },
+                    {
+                        id: '4',
+                        tytul: 'Pulp Fiction',
+                        rezyser: 'Quentin Tarantino',
+                        rok: 1994,
+                        gatunek: 'Kryminalny',
+                        gatunki: ['Kryminalny', 'Dramat'],
+                        ocena: 8.9,
+                        obrazek: 'https://via.placeholder.com/210x295?text=Pulp+Fiction',
+                        opis: 'Przeplatające się historie gangsterów z Los Angeles.'
+                    },
+                    {
+                        id: '5',
+                        tytul: 'Inception',
+                        rezyser: 'Christopher Nolan',
+                        rok: 2010,
+                        gatunek: 'Sci-Fi',
+                        gatunki: ['Sci-Fi', 'Akcja', 'Thriller'],
+                        ocena: 8.8,
+                        obrazek: 'https://via.placeholder.com/210x295?text=Inception',
+                        opis: 'Złodziej specjalizujący się w kradzieży sekretów z podświadomości.'
+                    },
+                    {
+                        id: '6',
+                        tytul: 'Matrix',
+                        rezyser: 'Wachowski Sisters',
+                        rok: 1999,
+                        gatunek: 'Sci-Fi',
+                        gatunki: ['Sci-Fi', 'Akcja'],
+                        ocena: 8.7,
+                        obrazek: 'https://via.placeholder.com/210x295?text=Matrix',
+                        opis: 'Programista odkrywa prawdę o rzeczywistości.'
+                    }
+                ];
+                this.saveMovies(defaultMovies);
+                this.setCounter(7);
+            }
+        }
+
+        async getMovies() {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    const movies = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
+                    resolve(movies);
+                }, 100);
+            });
+        }
+
+        async getMovieById(id) {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    const movies = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
+                    const movie = movies.find(m => m.id === id);
+                    resolve(movie);
+                }, 50);
+            });
+        }
+
+        async addMovie(movieData) {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    try {
+                        const movies = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
+                        const newId = this.getNextId();
+                        const newMovie = {
+                            id: newId.toString(),
+                            tytul: movieData.tytul || 'Bez tytułu',
+                            rezyser: movieData.rezyser || 'Nieznany reżyser',
+                            rok: parseInt(movieData.rok) || new Date().getFullYear(),
+                            gatunek: movieData.gatunek || 'Nieznany',
+                            gatunki: movieData.gatunki || [movieData.gatunek || 'Nieznany'],
+                            ocena: parseFloat(movieData.ocena) || 0,
+                            obrazek: movieData.obrazek || 'https://via.placeholder.com/210x295?text=Brak+obrazu',
+                            opis: movieData.opis || 'Brak opisu'
+                        };
+                        movies.push(newMovie);
+                        this.saveMovies(movies);
+                        resolve(newMovie);
+                    } catch (error) {
+                        reject(error);
+                    }
+                }, 100);
+            });
+        }
+
+        async updateMovie(id, movieData) {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    try {
+                        const movies = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
+                        const index = movies.findIndex(m => m.id === id);
+                        if (index === -1) {
+                            reject(new Error('Film nie został znaleziony'));
+                            return;
+                        }
+                        movies[index] = {
+                            ...movies[index],
+                            tytul: movieData.tytul || movies[index].tytul,
+                            rezyser: movieData.rezyser || movies[index].rezyser,
+                            rok: parseInt(movieData.rok) || movies[index].rok,
+                            gatunek: movieData.gatunek || movies[index].gatunek,
+                            gatunki: movieData.gatunki || [movieData.gatunek] || movies[index].gatunki,
+                            ocena: parseFloat(movieData.ocena) || movies[index].ocena,
+                            obrazek: movieData.obrazek || movies[index].obrazek,
+                            opis: movieData.opis || movies[index].opis
+                        };
+                        this.saveMovies(movies);
+                        resolve(movies[index]);
+                    } catch (error) {
+                        reject(error);
+                    }
+                }, 100);
+            });
+        }
+
+        async deleteMovie(id) {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    try {
+                        const movies = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
+                        const initialLength = movies.length;
+                        const filteredMovies = movies.filter(m => m.id !== id);
+                        if (filteredMovies.length === initialLength) {
+                            reject(new Error('Film nie został znaleziony'));
+                            return;
+                        }
+                        this.saveMovies(filteredMovies);
+                        resolve(true);
+                    } catch (error) {
+                        reject(error);
+                    }
+                }, 100);
+            });
+        }
+
+        saveMovies(movies) {
+            localStorage.setItem(this.storageKey, JSON.stringify(movies));
+        }
+
+        getNextId() {
+            const counter = parseInt(localStorage.getItem(this.counterKey) || '1');
+            this.setCounter(counter + 1);
+            return counter;
+        }
+
+        setCounter(value) {
+            localStorage.setItem(this.counterKey, value.toString());
+        }
+    }
+
+    // Inicjalizacja zmiennych globalnych
+    const filmy = [];
+    let selectedFilm = 0;
+    let visibleFilms = [];
+    let filmsPerRow = 3;
+    let currentPage = 1;
+    let filmsPerPage = 6;
+    let editingMovieId = null;
+
+    const apiService = new LocalStorageService();
+
+    // Funkcja ładowania filmów z localStorage
+    async function loadFilms() {
+        try {
+            const movies = await apiService.getMovies();
+            return movies;
+        } catch (err) {
+            console.error('Błąd ładowania:', err);
+            return [];
+        }
+    }
+
+    function updateFilmsPerRow() {
+        const w = window.innerWidth;
+        if (w < 768) {
+            filmsPerRow = 1;
+            filmsPerPage = 5;
+        } else if (w < 1024) {
+            filmsPerRow = 2;
+            filmsPerPage = 6;
+        } else {
+            filmsPerRow = 3;
+            filmsPerPage = 6;
+        }
+    }
+
+    function setupKeyboardNavigation() {
+        document.removeEventListener('keydown', handleKeyNavigation);
+        document.addEventListener('keydown', handleKeyNavigation);
+    }
+
+    function handleKeyNavigation(e) {
+        if (!visibleFilms.length) return;
+        const prev = selectedFilm;
+        const currentPageFilms = getCurrentPageFilms();
+        switch (e.key) {
+            case 'ArrowUp': if (selectedFilm >= filmsPerRow) selectedFilm -= filmsPerRow; break;
+            case 'ArrowDown': if (selectedFilm + filmsPerRow < currentPageFilms.length) selectedFilm += filmsPerRow; break;
+            case 'ArrowLeft': if (selectedFilm > 0) selectedFilm--; break;
+            case 'ArrowRight': if (selectedFilm < currentPageFilms.length - 1) selectedFilm++; break;
+            case 'Enter': {
+                const f = currentPageFilms[selectedFilm];
+                if (f) showMovieDetails(f);
+                break;
+            }
+            default: return;
+        }
+        if (prev !== selectedFilm) {
+            renderFilms(currentPageFilms);
+            const cards = document.querySelectorAll('#film-catalog-section > article');
+            cards[selectedFilm]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }
+
+    function showMovieDetails(movie) {
+        alert(`Szczegóły filmu "${movie.tytul}"\nReżyser: ${movie.rezyser}\nRok: ${movie.rok}\nGatunek: ${movie.gatunek}\nOcena: ${movie.ocena || 'Brak oceny'}\n\nOpis: ${movie.opis}`);
+    }
+
+    function filterBySearch(arr) {
+        if (!window.searchText) return arr;
+        return arr.filter(f => f.tytul.toLowerCase().includes(window.searchText)
+            || f.rezyser.toLowerCase().includes(window.searchText));
+    }
+
+    function filterByCategory(arr) {
+        if (window.currentFilter === 'Wszystkie') return arr;
+
+        if (window.currentFilter === 'Ulubione') {
+            const favoriteFilms = JSON.parse(localStorage.getItem('favoriteFilms') || '[]');
+            return arr.filter(f => favoriteFilms.some(fav => fav.tytul === f.tytul));
+        }
+
+        return arr.filter(f => f.gatunki.includes(window.currentFilter));
+    }
+
+    function sortFilms(arr) {
+        if (window.currentSort === 'Oceny (najlepsze)') return [...arr].sort((a,b)=>b.ocena - a.ocena);
+        if (window.currentSort === 'Roku (najnowsze)') return [...arr].sort((a,b)=>b.rok - a.rok);
+        if (window.currentSort === 'Tytułu (A-Z)') return [...arr].sort((a,b)=>a.tytul.localeCompare(b.tytul));
+        return arr;
+    }
+
+    function updateButtonStyles() {
+        const categoryButtons = document.querySelectorAll('#filter-controls li');
+        categoryButtons.forEach(btn => {
+            if (btn.innerText === window.currentFilter) {
+                if (btn.innerText === 'Ulubione') {
+                    btn.className = 'bg-red-500 text-white px-4 py-1 rounded cursor-pointer';
+                } else {
+                    btn.className = 'bg-blue-500 text-white px-4 py-1 rounded cursor-pointer';
+                }
+            } else {
+                if (btn.innerText === 'Ulubione') {
+                    btn.className = 'bg-red-400 text-white px-4 py-1 rounded cursor-pointer hover:bg-red-500';
+                } else {
+                    btn.className = 'bg-gray-200 text-gray-800 px-4 py-1 rounded cursor-pointer hover:bg-gray-300';
+                }
+            }
+        });
+
+        const sortButtons = document.querySelectorAll('#sort-controls li');
+        sortButtons.forEach(btn => {
+            if (btn.innerText === window.currentSort) {
+                btn.className = 'bg-blue-500 text-white px-4 py-1 rounded cursor-pointer';
+            } else {
+                btn.className = 'bg-gray-200 text-gray-800 px-4 py-1 rounded cursor-pointer hover:bg-gray-300';
+            }
+        });
+    }
+
+    function getCurrentPageFilms() {
+        const startIndex = (currentPage - 1) * filmsPerPage;
+        const endIndex = startIndex + filmsPerPage;
+        return visibleFilms.slice(startIndex, endIndex);
+    }
+
+    function getTotalPages() {
+        return Math.ceil(visibleFilms.length / filmsPerPage);
+    }
+
+    function createPaginationControls() {
+        const paginationContainer = document.getElementById('pagination-controls');
+        if (paginationContainer) {
+            paginationContainer.remove();
+        }
+
+        const totalPages = getTotalPages();
+        if (totalPages <= 1) return;
+
+        const pagination = document.createElement('div');
+        pagination.id = 'pagination-controls';
+        pagination.className = 'flex justify-center items-center gap-2 mt-6 mb-4';
+
+        const prevBtn = document.createElement('button');
+        prevBtn.innerHTML = '← Poprzednia';
+        prevBtn.className = currentPage === 1 ?
+            'px-4 py-2 bg-gray-300 text-gray-500 rounded cursor-not-allowed' :
+            'px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 cursor-pointer';
+        prevBtn.disabled = currentPage === 1;
+        prevBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                selectedFilm = 0;
+                renderFilms(getCurrentPageFilms());
+                createPaginationControls();
+            }
+        });
+
+        const pageInfo = document.createElement('span');
+        pageInfo.className = 'px-4 py-2 text-gray-700';
+        pageInfo.innerHTML = `Strona ${currentPage} z ${totalPages}`;
+
+        const nextBtn = document.createElement('button');
+        nextBtn.innerHTML = 'Następna →';
+        nextBtn.className = currentPage === totalPages ?
+            'px-4 py-2 bg-gray-300 text-gray-500 rounded cursor-not-allowed' :
+            'px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 cursor-pointer';
+        nextBtn.disabled = currentPage === totalPages;
+        nextBtn.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                selectedFilm = 0;
+                renderFilms(getCurrentPageFilms());
+                createPaginationControls();
+            }
+        });
+
+        pagination.append(prevBtn, pageInfo, nextBtn);
+
+        const catalogSection = document.getElementById('film-catalog-section');
+        catalogSection.parentNode.insertBefore(pagination, catalogSection.nextSibling);
+    }
+
+    async function dynamicSort(fullList) {
+        let result = filterBySearch(fullList);
+        result = filterByCategory(result);
+        result = sortFilms(result);
+        visibleFilms = result;
+        currentPage = 1;
+        selectedFilm = 0;
+        renderFilms(getCurrentPageFilms());
+        createPaginationControls();
+        updateButtonStyles();
+    }
+
+    function createHeader() {
+        const header = document.createElement('header');
+        header.className = 'bg-blue-600 text-white py-4 mb-4';
+        const container = document.createElement('div');
+        container.className = 'container mx-auto px-4 flex justify-between items-center';
+
+        const h1 = document.createElement('h1');
+        h1.innerText = 'Biblioteka Filmów';
+        h1.className = 'text-2xl font-bold';
+
+        const addBtn = document.createElement('button');
+        addBtn.innerHTML = '<i class="fas fa-plus mr-2"></i>Dodaj Film';
+        addBtn.className = 'bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition-colors';
+        addBtn.addEventListener('click', showAddMovieForm);
+
+        container.append(h1, addBtn);
+        header.appendChild(container);
+        document.body.appendChild(header);
+    }
+
+    function createMain(list) {
+        const main = document.createElement('main');
+        main.className = 'container mx-auto px-4';
+        const sortSec = document.createElement('section');
+        sortSec.id = 'sort-section';
+        sortSec.className = 'bg-white p-4 rounded-lg shadow-md mb-4';
+        const catSec = document.createElement('section');
+        catSec.id = 'film-catalog-section';
+        catSec.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
+        sortSec.append(createFilterControls(list), createSortControls(list), createSearchControls(list));
+        main.append(sortSec, catSec);
+        document.body.appendChild(main);
+    }
+
+    function createFilterControls(fullList) {
+        const art = document.createElement('article');
+        art.className = 'mb-4';
+        art.id = 'filter-controls';
+
+        const h3 = document.createElement('h3');
+        h3.innerText = 'Filtruj według gatunku:';
+        h3.className = 'font-medium text-gray-800 mb-2';
+
+        const ul = document.createElement('ul');
+        ul.className = 'flex flex-wrap gap-2';
+
+        const favoritesLi = document.createElement('li');
+        favoritesLi.innerText = 'Ulubione';
+        favoritesLi.className = window.currentFilter === 'Ulubione' ?
+            'bg-red-500 text-white px-4 py-1 rounded cursor-pointer' :
+            'bg-red-400 text-white px-4 py-1 rounded cursor-pointer hover:bg-red-500';
+
+        favoritesLi.addEventListener('click', () => {
+            window.currentFilter = 'Ulubione';
+            dynamicSort(fullList);
+        });
+        ul.appendChild(favoritesLi);
+
+        const genres = ['Wszystkie', ...new Set(fullList.flatMap(f=>f.gatunki))];
+        genres.forEach(g => {
+            const li = document.createElement('li');
+            li.innerText = g;
+            li.className = g === window.currentFilter ?
+                'bg-blue-500 text-white px-4 py-1 rounded cursor-pointer' :
+                'bg-gray-200 text-gray-800 px-4 py-1 rounded cursor-pointer hover:bg-gray-300';
+
+            li.addEventListener('click', () => {
+                window.currentFilter = g;
+                dynamicSort(fullList);
+            });
+            ul.appendChild(li);
+        });
+
+        art.append(h3, ul);
+        return art;
+    }
+
+    function createSortControls(fullList) {
+        const art = document.createElement('article');
+        art.className = 'mb-2';
+        art.id = 'sort-controls';
+
+        const h3 = document.createElement('h3');
+        h3.innerText = 'Sortuj według:';
+        h3.className = 'font-medium text-gray-800 mb-2';
+
+        const ul = document.createElement('ul');
+        ul.className = 'flex flex-wrap gap-2';
+
+        ['Oceny (najlepsze)', 'Roku (najnowsze)', 'Tytułu (A-Z)'].forEach(cat => {
+            const li = document.createElement('li');
+            li.innerText = cat;
+            li.className = cat === window.currentSort ?
+                'bg-blue-500 text-white px-4 py-1 rounded cursor-pointer' :
+                'bg-gray-200 text-gray-800 px-4 py-1 rounded cursor-pointer hover:bg-gray-300';
+
+            li.addEventListener('click', () => {
+                window.currentSort = cat;
+                dynamicSort(fullList);
+            });
+            ul.appendChild(li);
+        });
+        art.append(h3, ul);
+        return art;
+    }
+
+    function createSearchControls(fullList) {
+        const art = document.createElement('article');
+        art.className='mb-4';
+        const h3 = document.createElement('h3');
+        h3.innerText='Wyszukaj film:';
+        h3.className='font-medium text-gray-800 mb-2';
+        const input=document.createElement('input');
+        input.type='text';
+        input.id='search_text';
+        input.placeholder='wpisz tytuł filmu lub reżysera';
+        input.ariaLabel='Wpisz tytuł lub reżysera';
+        input.className='bg-gray-200 text-gray-800 px-4 py-1 rounded w-full max-w-md';
+        input.addEventListener('input', e=>{
+            window.searchText=e.target.value.toLowerCase();
+            dynamicSort(fullList);
+        });
+        art.append(h3, input);
+        return art;
+    }
+
+    function renderFilms(list) {
+        const container = document.getElementById('film-catalog-section');
+        container.innerHTML = '<h2 hidden>Katalog filmów</h2>';
+        if (!list.length) {
+            container.innerHTML += '<p class="col-span-3 text-center p-4 text-gray-600">Nie znaleziono filmów spełniających kryteria.</p>';
+            return;
+        }
+        list.forEach((item,i)=>{
+            const card = document.createElement('article');
+            card.dataset.index=i;
+            card.className = `mb-4 bg-white rounded-lg shadow-md transition-all duration-200 hover:shadow-lg${i===selectedFilm?' border-2 border-blue-500 ring-2 ring-blue-300':''}`;
+            card.innerHTML = `
+              <div class="flex justify-between items-center p-2 border-b">
+                <h3 class="text-lg font-medium">${item.tytul}</h3>
+                <div class="flex gap-2">
+                  <button class="text-blue-500 hover:text-blue-700 edit-btn" data-id="${item.id}">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="text-red-500 hover:text-red-700 delete-btn" data-id="${item.id}">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                  <button class="text-pink-500 hover:text-pink-700 favorite-btn" data-id="${item.id}">
+                    <i class="fas fa-heart"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="bg-white p-4 flex justify-center items-center">
+                <img src="${item.obrazek}" alt="Plakat ${item.tytul}" class="w-32 h-48 object-cover border border-gray-300" onerror="this.src='https://via.placeholder.com/210x295?text=Brak+obrazu';" />
+              </div>
+              <ul class="bg-white p-4 rounded-b-lg">
+                <li class="mb-1 text-gray-700">Reżyser: ${item.rezyser}</li>
+                <li class="mb-1 text-gray-700">Rok: ${item.rok}</li>
+                <li class="mb-1 text-gray-700">Gatunek: ${item.gatunek}</li>
+                <li class="mt-2 text-gray-700">
+                  <div class="mb-1 text-gray-700">Ocena: ${item.ocena||'Brak'}</div>
+                  ${item.ocena>0?`<div class="w-full bg-gray-200 rounded-full h-2"><div class="bg-green-500 h-2 rounded-full" style="width:${(item.ocena/10)*100}%"></div></div>`:''}
+                </li>
+              </ul>`;
+
+            card.addEventListener('click', (e) => {
+                if (!e.target.closest('button')) {
+                    selectedFilm = i;
+                    renderFilms(list);
+                }
+            });
+
+            const editBtn = card.querySelector('.edit-btn');
+            editBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showEditMovieForm(item);
+            });
+
+            const deleteBtn = card.querySelector('.delete-btn');
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteMovie(item.id);
+            });
+
+            const favoriteBtn = card.querySelector('.favorite-btn');
+            const favoriteFilms = JSON.parse(localStorage.getItem('favoriteFilms') || '[]');
+            const isFavorite = favoriteFilms.some(f => f.tytul === item.tytul);
+            if (isFavorite) {
+                favoriteBtn.classList.add('text-red-500');
+            }
+
+            favoriteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleFavorite(item, favoriteBtn);
+            });
+
+            container.appendChild(card);
+        });
+    }
+
+    function toggleFavorite(movie, heartIcon) {
+        let updatedFavorites = JSON.parse(localStorage.getItem('favoriteFilms') || '[]');
+        const alreadyFavorite = updatedFavorites.some(f => f.tytul === movie.tytul);
+
+        if (alreadyFavorite) {
+            updatedFavorites = updatedFavorites.filter(f => f.tytul !== movie.tytul);
+            heartIcon.classList.remove('text-red-500');
+            showMessage('Usunięto z ulubionych', 'info');
+        } else {
+            updatedFavorites.push(movie);
+            heartIcon.classList.add('text-red-500');
+            showMessage('Dodano do ulubionych', 'success');
+        }
+
+        localStorage.setItem('favoriteFilms', JSON.stringify(updatedFavorites));
+    }
+
+    async function deleteMovie(movieId) {
+        if (!confirm('Czy na pewno chcesz usunąć ten film?')) return;
+
+        showLoading('Usuwanie filmu...');
+        try {
+            await apiService.deleteMovie(movieId);
+            showMessage('Film został usunięty pomyślnie', 'success');
+            await refreshMovieList();
+        } catch (error) {
+            showMessage('Błąd podczas usuwania filmu: ' + error.message, 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    function showAddMovieForm() {
+        editingMovieId = null;
+        showMovieForm();
+    }
+
+    function showEditMovieForm(movie) {
+        editingMovieId = movie.id;
+        showMovieForm(movie);
+    }
+
+    function showMovieForm(movie = null) {
+        const isEditing = movie !== null;
+
+        const overlay = document.createElement('div');
+        overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) closeMovieForm();
+        });
+
+        const form = document.createElement('div');
+        form.className = 'bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto';
+        form.innerHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold">${isEditing ? 'Edytuj Film' : 'Dodaj Nowy Film'}</h2>
+                    <button class="text-gray-500 hover:text-gray-700 close-btn">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <form id="movie-form" class="space-y-4">
+                    <div>
+                        <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Tytuł*</label>
+                        <input type="text" id="title" name="title" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               value="${movie?.tytul || ''}" placeholder="Wprowadź tytuł filmu">
+                    </div>
+                    <div>
+                        <label for="director" class="block text-sm font-medium text-gray-700 mb-1">Reżyser*</label>
+                        <input type="text" id="director" name="director" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               value="${movie?.rezyser || ''}" placeholder="Wprowadź imię i nazwisko reżysera">
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <label for="year" class="block text-sm font-medium text-gray-700 mb-1">Rok produkcji*</label>
+                            <input type="number" id="year" name="year" required min="1900" max="2030"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   value="${movie?.rok || ''}" placeholder="np. 2023">
+                        </div>
+                        <div class="flex-1">
+                            <label for="rating" class="block text-sm font-medium text-gray-700 mb-1">Ocena (0-10)</label>
+                            <input type="number" id="rating" name="rating" min="0" max="10" step="0.1"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   value="${movie?.ocena || ''}" placeholder="np. 8.5">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="genre" class="block text-sm font-medium text-gray-700 mb-1">Główny gatunek*</label>
+                        <select id="genre" name="genre" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Wybierz gatunek</option>
+                            <option value="Akcja" ${movie?.gatunek === 'Akcja' ? 'selected' : ''}>Akcja</option>
+                            <option value="Komedia" ${movie?.gatunek === 'Komedia' ? 'selected' : ''}>Komedia</option>
+                            <option value="Dramat" ${movie?.gatunek === 'Dramat' ? 'selected' : ''}>Dramat</option>
+                            <option value="Horror" ${movie?.gatunek === 'Horror' ? 'selected' : ''}>Horror</option>
+                            <option value="Sci-Fi" ${movie?.gatunek === 'Sci-Fi' ? 'selected' : ''}>Sci-Fi</option>
+                            <option value="Thriller" ${movie?.gatunek === 'Thriller' ? 'selected' : ''}>Thriller</option>
+                            <option value="Romans" ${movie?.gatunek === 'Romans' ? 'selected' : ''}>Romans</option>
+                            <option value="Kryminalny" ${movie?.gatunek === 'Kryminalny' ? 'selected' : ''}>Kryminalny</option>
+                            <option value="Fantasy" ${movie?.gatunek === 'Fantasy' ? 'selected' : ''}>Fantasy</option>
+                            <option value="Animowany" ${movie?.gatunek === 'Animowany' ? 'selected' : ''}>Animowany</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="poster" class="block text-sm font-medium text-gray-700 mb-1">URL Plakatu</label>
+                        <input type="url" id="poster" name="poster"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               value="${movie?.obrazek || ''}" placeholder="https://example.com/poster.jpg">
+                    </div>
+                    <div>
+                        <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Opis</label>
+                        <textarea id="description" name="description" rows="3"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  placeholder="Krótki opis filmu...">${movie?.opis || ''}</textarea>
+                    </div>
+                    <div class="flex gap-3 pt-4">
+                        <button type="submit" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md transition-colors">
+                            ${isEditing ? 'Zapisz Zmiany' : 'Dodaj Film'}
+                        </button>
+                        <button type="button" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-4 rounded-md transition-colors cancel-btn">
+                            Anuluj
+                        </button>
+                    </div>
+                </form>
+            `;
+
+        const closeBtn = form.querySelector('.close-btn');
+        const cancelBtn = form.querySelector('.cancel-btn');
+        const movieForm = form.querySelector('#movie-form');
+
+        closeBtn.addEventListener('click', closeMovieForm);
+        cancelBtn.addEventListener('click', closeMovieForm);
+        movieForm.addEventListener('submit', handleMovieFormSubmit);
+
+        overlay.appendChild(form);
+        document.body.appendChild(overlay);
+
+        // Focus na pierwszy input
+        form.querySelector('#title').focus();
+    }
+
+    function closeMovieForm() {
+        const overlay = document.querySelector('.fixed.inset-0');
+        if (overlay) {
+            overlay.remove();
+        }
+    }
+
+    async function handleMovieFormSubmit(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+
+        const movieData = {
+            tytul: formData.get('title').trim(),
+            rezyser: formData.get('director').trim(),
+            rok: parseInt(formData.get('year')),
+            gatunek: formData.get('genre'),
+            gatunki: [formData.get('genre')],
+            ocena: parseFloat(formData.get('rating')) || 0,
+            obrazek: formData.get('poster').trim() || 'https://via.placeholder.com/210x295?text=Brak+obrazu',
+            opis: formData.get('description').trim() || 'Brak opisu'
+        };
+
+        // Walidacja
+        if (!movieData.tytul || !movieData.rezyser || !movieData.rok || !movieData.gatunek) {
+            showMessage('Wypełnij wszystkie wymagane pola', 'error');
+            return;
+        }
+
+        if (movieData.rok < 1900 || movieData.rok > 2030) {
+            showMessage('Rok produkcji musi być między 1900 a 2030', 'error');
+            return;
+        }
+
+        if (movieData.ocena < 0 || movieData.ocena > 10) {
+            showMessage('Ocena musi być między 0 a 10', 'error');
+            return;
+        }
+
+        showLoading(editingMovieId ? 'Zapisywanie zmian...' : 'Dodawanie filmu...');
+
+        try {
+            if (editingMovieId) {
+                await apiService.updateMovie(editingMovieId, movieData);
+                showMessage('Film został zaktualizowany pomyślnie', 'success');
+            } else {
+                await apiService.addMovie(movieData);
+                showMessage('Film został dodany pomyślnie', 'success');
+            }
+
+            closeMovieForm();
+            await refreshMovieList();
+        } catch (error) {
+            showMessage('Błąd: ' + error.message, 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    async function refreshMovieList() {
+        const data = await loadFilms();
+        filmy.length = 0;
+        filmy.push(...data);
+
+        // Aktualizacja filtrów
+        updateFilterControls(data);
+        dynamicSort(data);
+    }
+
+    function updateFilterControls(fullList) {
+        const filterControls = document.getElementById('filter-controls');
+        if (filterControls) {
+            const newFilterControls = createFilterControls(fullList);
+            filterControls.replaceWith(newFilterControls);
+        }
+    }
+
+    function showMessage(message, type = 'info') {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `fixed top-4 right-4 z-50 px-4 py-2 rounded-md text-white transform transition-transform duration-300 translate-x-full`;
+
+        switch (type) {
+            case 'success':
+                messageDiv.classList.add('bg-green-500');
+                break;
+            case 'error':
+                messageDiv.classList.add('bg-red-500');
+                break;
+            case 'info':
+            default:
+                messageDiv.classList.add('bg-blue-500');
+                break;
+        }
+
+        messageDiv.textContent = message;
+        document.body.appendChild(messageDiv);
+
+        setTimeout(() => {
+            messageDiv.classList.remove('translate-x-full');
+        }, 100);
+
+        setTimeout(() => {
+            messageDiv.classList.add('translate-x-full');
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 300);
+        }, 3000);
+    }
+
+    function showLoading(message = 'Ładowanie...') {
+        let loadingDiv = document.getElementById('loading-overlay');
+        if (!loadingDiv) {
+            loadingDiv = document.createElement('div');
+            loadingDiv.id = 'loading-overlay';
+            loadingDiv.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            loadingDiv.innerHTML = `
+                    <div class="bg-white p-6 rounded-lg text-center">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p class="text-gray-600">${message}</p>
+                    </div>
+                `;
+            document.body.appendChild(loadingDiv);
+        } else {
+            loadingDiv.querySelector('p').textContent = message;
+        }
+    }
+
+    function hideLoading() {
+        const loadingDiv = document.getElementById('loading-overlay');
+        if (loadingDiv) {
+            loadingDiv.remove();
+        }
+    }
+
+    function createFooter() {
+        const f = document.createElement('footer');
+        f.className = 'text-center py-4 text-gray-600 text-sm mt-8';
+        f.innerHTML = `<p>© 2025 Biblioteka Filmów | Zarządzanie kolekcją filmów</p><p class="mt-2 text-xs">Użyj strzałek (←↑→↓) do nawigacji i Enter, aby zobaczyć szczegóły filmu</p>`;
+        document.body.appendChild(f);
+    }
+
+    // Inicjalizacja aplikacji
+    window.addEventListener('DOMContentLoaded', async () => {
+        updateFilmsPerRow();
+        window.addEventListener('resize', updateFilmsPerRow);
+        setupKeyboardNavigation();
+
+        const data = await loadFilms();
+        document.getElementById('loading')?.remove();
+
+        if (!data.length) {
+            document.body.innerHTML = '<div class="text-center mt-10"><h2>Błąd ładowania danych</h2></div>';
+            return;
+        }
+
+        filmy.push(...data);
+        window.currentFilter = 'Wszystkie';
+        window.currentSort = 'Oceny (najlepsze)';
+        window.searchText = '';
+
+        createHeader();
+        createMain(data);
+        createFooter();
+
+        visibleFilms = [...data].sort((a,b) => b.ocena - a.ocena);
+        renderFilms(getCurrentPageFilms());
+        createPaginationControls();
+    });
+</script>
+</body>
+</html>
